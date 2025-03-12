@@ -52,11 +52,12 @@ if uploaded_train and uploaded_test:
     
     # Ensure Y and Y_pred are valid
     if len(Y) > 0 and len(Y_pred) > 0:
-        st.write("Sensitivity score:", recall_score(Y, Y_pred).round(2))
-        st.write("Accuracy Score:", accuracy_score(Y, Y_pred).round(2))
-        st.write("Precision Score:", precision_score(Y, Y_pred).round(2))
-        st.write("F1 Score:", f1_score(Y, Y_pred).round(2))
-        st.write("Log Loss:", log_loss(Y, Y_pred).round(2))
+        st.write("Sensitivity score:", round(float(recall_score(Y, Y_pred)), 2))
+        st.write("Accuracy Score:", round(float(accuracy_score(Y, Y_pred)), 2))
+        st.write("Precision Score:", round(float(precision_score(Y, Y_pred)), 2))
+        st.write("F1 Score:", round(float(f1_score(Y, Y_pred)), 2))
+        st.write("Log Loss:", round(float(log_loss(Y, Y_pred)), 2))
+
         
         # ROC Curve
         fpr, tpr, _ = roc_curve(Y, model.predict_proba(X)[:, 1])
