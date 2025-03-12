@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+st.write("Y values:", Y)
+st.write("Predicted Y values:", Y_pred)
+
 from sklearn.metrics import recall_score
 
 
