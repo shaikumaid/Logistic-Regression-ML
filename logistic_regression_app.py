@@ -11,17 +11,24 @@ with open(model_path, "rb") as file:
 with open(scaler_path, "rb") as file:
     scaler = pickle.load(file)  # Load the same scaler used in training
 
-st.title("Logistic Regression Live Prediction")
+st.title("🚢 Titanic Survival Prediction")
 
-# User Inputs
-st.sidebar.header("Enter Passenger Details:")
-pclass = st.sidebar.selectbox("Passenger Class", [1, 2, 3])
-age = st.sidebar.number_input("Age", min_value=1, max_value=100, value=30)
-sibsp = st.sidebar.number_input("Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
-parch = st.sidebar.number_input("Parents/Children Aboard", min_value=0, max_value=10, value=0)
-fare = st.sidebar.number_input("Fare", min_value=0.0, max_value=500.0, value=50.0)
-sex = st.sidebar.selectbox("Sex", ["male", "female"])
-embarked = st.sidebar.selectbox("Embarked Port", ["C", "Q", "S"])
+# Center the input fields using columns
+st.markdown("<h3 style='text-align: center;'>Enter Passenger Details</h3>", unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    pclass = st.selectbox("Passenger Class", [1, 2, 3])
+    age = st.number_input("Age", min_value=1, max_value=100, value=30)
+    sibsp = st.number_input("Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
+
+with col2:
+    parch = st.number_input("Parents/Children Aboard", min_value=0, max_value=10, value=0)
+    fare = st.number_input("Fare", min_value=0.0, max_value=500.0, value=50.0)
+    sex = st.selectbox("Sex", ["male", "female"])
+
+embarked = st.selectbox("Embarked Port", ["C", "Q", "S"])
 
 # Encode Categorical Variables
 sex_encoded = 1 if sex == "male" else 0
@@ -35,8 +42,9 @@ input_data = pd.DataFrame([[pclass, age, sibsp, parch, fare, sex_encoded, embark
 # Apply StandardScaler (Ensuring it's the same as used in training)
 input_data_scaled = scaler.transform(input_data)  # Ensure same scaling
 
-# Make Prediction
-if st.button("Predict"):
+# Center-align the button
+st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+if st.button("Predict 🚀"):
     prediction = model.predict(input_data_scaled)[0]
     probability = model.predict_proba(input_data_scaled)[0][1]
 
@@ -45,3 +53,4 @@ if st.button("Predict"):
         st.success(f"🟢 Survived! (Probability: {round(probability * 100, 2)}%)")
     else:
         st.error(f"🔴 Did not survive. (Probability: {round((1 - probability) * 100, 2)}%)")
+st.markdown("</div>", unsafe_allow_html=True)
