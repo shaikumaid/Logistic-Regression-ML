@@ -231,7 +231,7 @@ print("Accuracy Score:",ac)
 
 from sklearn.metrics import recall_score,precision_score,f1_score
 
-print("Sensitivity score:",recall_score(Y,Y_pred).round(2))
+st.write("Sensitivity score:", recall_score(Y, Y_pred).round(2))
 print("precision_score:",precision_score(Y,Y_pred).round(2))
 print("f1_score:",f1_score(Y,Y_pred).round(2))
 
