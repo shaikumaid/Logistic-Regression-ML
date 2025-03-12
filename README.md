@@ -7,7 +7,7 @@ Description of the app ...
 
 ## Demo App
 
-[![Streamlit App](https://logistic-regression-ml0.streamlit.app/)](https://app-starter-kit.streamlit.app/)
+[![Streamlit App](https://logistic-regression-ml0.streamlit.app/)]([https://app-starter-kit.streamlit.app/](https://logistic-regression-ml0.streamlit.app/))
 
 ## GitHub Codespaces
 
