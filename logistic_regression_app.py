@@ -1,73 +1,39 @@
 import streamlit as st
+import pickle
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score, log_loss, roc_curve
 
-st.title('Logistic Regression Analysis')
+# Load the trained model
+model_path = "logistic_regression_model.pkl"  # Update with the correct path
+with open(model_path, "rb") as file:
+    model = pickle.load(file)
 
-# 🔹 Read CSV files directly (No need for file upload)
-train_file_path = "Titanic_train.csv"  # Update with actual path
-test_file_path = "Titanic_test.csv"    # Update with actual path
+st.title("Logistic Regression Live Prediction")
 
-df_train = pd.read_csv(train_file_path)
-df_test = pd.read_csv(test_file_path)
+# User Inputs
+st.sidebar.header("Enter Passenger Details:")
+pclass = st.sidebar.selectbox("Passenger Class", [1, 2, 3])
+age = st.sidebar.number_input("Age", min_value=1, max_value=100, value=30)
+sibsp = st.sidebar.number_input("Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
+parch = st.sidebar.number_input("Parents/Children Aboard", min_value=0, max_value=10, value=0)
+fare = st.sidebar.number_input("Fare", min_value=0.0, max_value=500.0, value=50.0)
 
-st.write("Training Data Sample:", df_train.head())
-st.write("Testing Data Sample:", df_test.head())
+# Convert input to DataFrame
+input_data = pd.DataFrame([[pclass, age, sibsp, parch, fare]],
+                          columns=["Pclass", "Age", "SibSp", "Parch", "Fare"])
 
-# 🔹 Concatenating Train & Test Data
-df = pd.concat([df_train, df_test], ignore_index=True)
+# Standardization (if required)
+# If the model was trained on scaled data, use the same scaler here
+# scaler = pickle.load(open("scaler.pkl", "rb"))  # Uncomment if needed
+# input_data = scaler.transform(input_data)
 
-# 🔹 Handle Missing Values
-df['Age'].fillna(df['Age'].median(), inplace=True)
-df['Fare'].fillna(df['Fare'].median(), inplace=True)
-df['Cabin'].fillna("C23 C25 C27", inplace=True)
-df['Embarked'].fillna("S", inplace=True)
+# Make Prediction
+if st.button("Predict"):
+    prediction = model.predict(input_data)[0]
+    probability = model.predict_proba(input_data)[0][1]
 
-# 🔹 Standardization
-scaler = StandardScaler()
-numerical_cols = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
-df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
-
-# 🔹 Label Encoding for Categorical Columns
-encoder = LabelEncoder()
-categorical_cols = ["Ticket", "Sex", "Cabin", "Embarked"]
-for col in categorical_cols:
-    df[col] = encoder.fit_transform(df[col])
-
-# 🔹 Preparing Data for Model
-df = df.dropna(subset=['Survived'])  # Ensure no NaN values in target
-X = df.select_dtypes(include=[np.number]).drop(columns=['Survived'])  # Features
-Y = df['Survived'].astype(int)  # Target variable
-
-# 🔹 Model Training
-model = LogisticRegression()
-if X.isnull().sum().sum() > 0:
-    st.write("⚠️ Warning: Missing values found in X. Filling with median.")
-    X.fillna(X.median(), inplace=True)
-
-model.fit(X, Y)
-Y_pred = model.predict(X)
-
-# 🔹 Model Evaluation
-if len(Y) > 0 and len(Y_pred) > 0:
-    st.write("✅ Sensitivity score:", round(recall_score(Y, Y_pred), 2))
-    st.write("✅ Accuracy Score:", round(accuracy_score(Y, Y_pred), 2))
-    st.write("✅ Precision Score:", round(precision_score(Y, Y_pred), 2))
-    st.write("✅ F1 Score:", round(f1_score(Y, Y_pred), 2))
-    st.write("✅ Log Loss:", round(log_loss(Y, model.predict_proba(X)), 2))
-    
-    # 🔹 ROC Curve
-    fpr, tpr, _ = roc_curve(Y, model.predict_proba(X)[:, 1])
-    plt.figure()
-    plt.plot(fpr, tpr, label="ROC Curve")
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.legend()
-    st.pyplot(plt)
-else:
-    st.write("❌ Error: Y or Y_pred is empty or not properly defined.")
+    # Display Result
+    if prediction == 1:
+        st.success(f"🟢 Survived! (Probability: {round(probability * 100, 2)}%)")
+    else:
+        st.error(f"🔴 Did not survive. (Probability: {round(probability * 100, 2)}%)")
