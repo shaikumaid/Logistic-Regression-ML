@@ -5,9 +5,10 @@
 
 Description of the app ...
 
-## Demo App
+## 🚀 Live Demo
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://logistic-regression-testapp.streamlit.app/)
 
-[![Streamlit App](https://logistic-regression-ml0.streamlit.app/)]([https://app-starter-kit.streamlit.app/](https://logistic-regression-ml0.streamlit.app/))
+
 
 ## GitHub Codespaces
 
