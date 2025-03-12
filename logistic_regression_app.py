@@ -39,11 +39,14 @@ if uploaded_train and uploaded_test:
     
     # Preparing Data
     df2 = df2.dropna(subset=['Survived'])  # Ensure no NaN values in target
-    X = df2.iloc[:, :-1]
+    X = df2.select_dtypes(include=[np.number])
     Y = df2['Survived'].astype(int)
     
     # Model Training
     model = LogisticRegression()
+    if X.isnull().sum().sum() > 0:
+        st.write("Warning: Missing values found in X. Filling with median.")
+        X.fillna(X.median(), inplace=True)
     model.fit(X, Y)
     Y_pred = model.predict(X)
     
