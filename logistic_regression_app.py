@@ -10,8 +10,8 @@ from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_sc
 st.title('Logistic Regression Analysis')
 
 # 🔹 Read CSV files directly (No need for file upload)
-train_file_path = "data/train.csv"  # Update with actual path
-test_file_path = "data/test.csv"    # Update with actual path
+train_file_path = "Titanic_train.csv"  # Update with actual path
+test_file_path = "Titanic_test.csv"    # Update with actual path
 
 df_train = pd.read_csv(train_file_path)
 df_test = pd.read_csv(test_file_path)
