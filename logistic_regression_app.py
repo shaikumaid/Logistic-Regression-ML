@@ -1,73 +1,50 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
+import pickle  # To load the saved model
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score, log_loss, roc_curve
 
-st.title('Logistic Regression Analysis')
+st.title('Titanic Survival Prediction 🚢')
 
-# 🔹 Read CSV files directly (No need for file upload)
-train_file_path = "Titanic_train.csv"  # Update with actual path
-test_file_path = "Titanic_test.csv"    # Update with actual path
+# 🔹 Load Pre-trained Model
+model_path = "logistic_regression_model.pkl"  # Update with actual model path
+try:
+    with open(model_path, "rb") as file:
+        model = pickle.load(file)
+    st.success("✅ Model loaded successfully!")
+except FileNotFoundError:
+    st.error("❌ Model file not found! Please train and save the model first.")
+    st.stop()
 
-df_train = pd.read_csv(train_file_path)
-df_test = pd.read_csv(test_file_path)
-
-st.write("Training Data Sample:", df_train.head())
-st.write("Testing Data Sample:", df_test.head())
-
-# 🔹 Concatenating Train & Test Data
-df = pd.concat([df_train, df_test], ignore_index=True)
-
-# 🔹 Handle Missing Values
-df['Age'].fillna(df['Age'].median(), inplace=True)
-df['Fare'].fillna(df['Fare'].median(), inplace=True)
-df['Cabin'].fillna("C23 C25 C27", inplace=True)
-df['Embarked'].fillna("S", inplace=True)
-
-# 🔹 Standardization
+# 🔹 Standard Scaler (Ensures input data is transformed correctly)
 scaler = StandardScaler()
-numerical_cols = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
-df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
 
-# 🔹 Label Encoding for Categorical Columns
-encoder = LabelEncoder()
-categorical_cols = ["Ticket", "Sex", "Cabin", "Embarked"]
-for col in categorical_cols:
-    df[col] = encoder.fit_transform(df[col])
+# 🔹 User Input Section
+st.header("Enter Passenger Details:")
 
-# 🔹 Preparing Data for Model
-df = df.dropna(subset=['Survived'])  # Ensure no NaN values in target
-X = df.select_dtypes(include=[np.number]).drop(columns=['Survived'])  # Features
-Y = df['Survived'].astype(int)  # Target variable
+pclass = st.selectbox("Passenger Class (Pclass)", [1, 2, 3])
+age = st.number_input("Age", min_value=0, max_value=100, value=30)
+sibsp = st.number_input("Siblings/Spouses Aboard (SibSp)", min_value=0, max_value=10, value=0)
+parch = st.number_input("Parents/Children Aboard (Parch)", min_value=0, max_value=10, value=0)
+fare = st.number_input("Fare Paid", min_value=0.0, max_value=500.0, value=30.0)
+sex = st.selectbox("Sex", ["male", "female"])
+embarked = st.selectbox("Embarked Port", ["C", "Q", "S"])
 
-# 🔹 Model Training
-model = LogisticRegression()
-if X.isnull().sum().sum() > 0:
-    st.write("⚠️ Warning: Missing values found in X. Filling with median.")
-    X.fillna(X.median(), inplace=True)
+# 🔹 Encode Categorical Data
+sex_encoded = 1 if sex == "male" else 0
+embarked_mapping = {"C": 0, "Q": 1, "S": 2}
+embarked_encoded = embarked_mapping[embarked]
 
-model.fit(X, Y)
-Y_pred = model.predict(X)
+# 🔹 Prepare Data for Prediction
+user_input = np.array([[pclass, age, sibsp, parch, fare, sex_encoded, embarked_encoded]])
+user_input_scaled = scaler.fit_transform(user_input)  # Standardization
 
-# 🔹 Model Evaluation
-if len(Y) > 0 and len(Y_pred) > 0:
-    st.write("✅ Sensitivity score:", round(recall_score(Y, Y_pred), 2))
-    st.write("✅ Accuracy Score:", round(accuracy_score(Y, Y_pred), 2))
-    st.write("✅ Precision Score:", round(precision_score(Y, Y_pred), 2))
-    st.write("✅ F1 Score:", round(f1_score(Y, Y_pred), 2))
-    st.write("✅ Log Loss:", round(log_loss(Y, model.predict_proba(X)), 2))
-    
-    # 🔹 ROC Curve
-    fpr, tpr, _ = roc_curve(Y, model.predict_proba(X)[:, 1])
-    plt.figure()
-    plt.plot(fpr, tpr, label="ROC Curve")
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.legend()
-    st.pyplot(plt)
-else:
-    st.write("❌ Error: Y or Y_pred is empty or not properly defined.")
+# 🔹 Make Prediction
+if st.button("Predict Survival"):
+    prediction = model.predict(user_input_scaled)
+    survival_prob = model.predict_proba(user_input_scaled)[0][1]
+
+    if prediction[0] == 1:
+        st.success(f"🟢 Survived! (Probability: {round(survival_prob * 100, 2)}%)")
+    else:
+        st.error(f"🔴 Did not survive. (Probability: {round((1 - survival_prob) * 100, 2)}%)")
