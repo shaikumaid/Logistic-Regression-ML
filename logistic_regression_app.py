@@ -5,67 +5,69 @@ import seaborn as sns
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import recall_score, confusion_matrix, accuracy_score, precision_score, f1_score, roc_curve, roc_auc_score, log_loss
+from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score, log_loss, roc_curve
 
 st.title('Logistic Regression Analysis')
 
-# File Uploading
-uploaded_train = st.file_uploader("Upload Training CSV", type=["csv"])
-uploaded_test = st.file_uploader("Upload Testing CSV", type=["csv"])
+# 🔹 Read CSV files directly (No need for file upload)
+train_file_path = "Titanic_train.csv"  # Update with actual path
+test_file_path = "Titanic_test.csv"    # Update with actual path
 
-if uploaded_train and uploaded_test:
-    df_train = pd.read_csv(uploaded_train)
-    df_test = pd.read_csv(uploaded_test)
+df_train = pd.read_csv(train_file_path)
+df_test = pd.read_csv(test_file_path)
 
-    st.write("Training Data Sample:", df_train.head())
-    st.write("Testing Data Sample:", df_test.head())
+st.write("Training Data Sample:", df_train.head())
+st.write("Testing Data Sample:", df_test.head())
 
-    # Data Preprocessing
-    df = pd.concat([df_train, df_test], ignore_index=True)
-    df['Age'].fillna(df['Age'].median(), inplace=True)
-    df['Fare'].fillna(df['Fare'].median(), inplace=True)
-    df['Cabin'].fillna("Unknown", inplace=True)  # Prevents information leakage
-    df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+# 🔹 Concatenating Train & Test Data
+df = pd.concat([df_train, df_test], ignore_index=True)
 
-    # Feature Scaling
-    SS = StandardScaler()
-    numerical_cols = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
-    df[numerical_cols] = SS.fit_transform(df[numerical_cols])
+# 🔹 Handle Missing Values
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Fare'].fillna(df['Fare'].median(), inplace=True)
+df['Cabin'].fillna("C23 C25 C27", inplace=True)
+df['Embarked'].fillna("S", inplace=True)
 
-    # Label Encoding
-    LE = LabelEncoder()
-    categorical_cols = ["Sex", "Embarked"]  # Removed 'Ticket' and 'Cabin' to avoid unique identifiers
-    for col in categorical_cols:
-        df[col] = LE.fit_transform(df[col])
+# 🔹 Standardization
+scaler = StandardScaler()
+numerical_cols = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
+df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
 
-    # Ensure 'Survived' is present
-    df = df.dropna(subset=['Survived'])
+# 🔹 Label Encoding for Categorical Columns
+encoder = LabelEncoder()
+categorical_cols = ["Ticket", "Sex", "Cabin", "Embarked"]
+for col in categorical_cols:
+    df[col] = encoder.fit_transform(df[col])
 
-    # Defining Features and Target
-    X = df.drop(columns=['Survived', 'Ticket', 'Cabin'], errors='ignore')  # Prevents leakage
-    Y = df['Survived'].astype(int)
+# 🔹 Preparing Data for Model
+df = df.dropna(subset=['Survived'])  # Ensure no NaN values in target
+X = df.select_dtypes(include=[np.number]).drop(columns=['Survived'])  # Features
+Y = df['Survived'].astype(int)  # Target variable
 
-    # Train-Test Split
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42, stratify=Y)
+# 🔹 Model Training
+model = LogisticRegression()
+if X.isnull().sum().sum() > 0:
+    st.write("⚠️ Warning: Missing values found in X. Filling with median.")
+    X.fillna(X.median(), inplace=True)
 
-    # Model Training
-    model = LogisticRegression()
-    model.fit(X_train, Y_train)
-    Y_pred = model.predict(X_test)
+model.fit(X, Y)
+Y_pred = model.predict(X)
 
-    # Performance Metrics
-    st.write("Sensitivity score:", round(float(recall_score(Y_test, Y_pred)), 2))
-    st.write("Accuracy Score:", round(float(accuracy_score(Y_test, Y_pred)), 2))
-    st.write("Precision Score:", round(float(precision_score(Y_test, Y_pred)), 2))
-    st.write("F1 Score:", round(float(f1_score(Y_test, Y_pred)), 2))
-    st.write("Log Loss:", round(float(log_loss(Y_test, model.predict_proba(X_test)))), 2)
-
-    # ROC Curve
-    fpr, tpr, _ = roc_curve(Y_test, model.predict_proba(X_test)[:, 1])
+# 🔹 Model Evaluation
+if len(Y) > 0 and len(Y_pred) > 0:
+    st.write("✅ Sensitivity score:", round(recall_score(Y, Y_pred), 2))
+    st.write("✅ Accuracy Score:", round(accuracy_score(Y, Y_pred), 2))
+    st.write("✅ Precision Score:", round(precision_score(Y, Y_pred), 2))
+    st.write("✅ F1 Score:", round(f1_score(Y, Y_pred), 2))
+    st.write("✅ Log Loss:", round(log_loss(Y, model.predict_proba(X)), 2))
+    
+    # 🔹 ROC Curve
+    fpr, tpr, _ = roc_curve(Y, model.predict_proba(X)[:, 1])
     plt.figure()
     plt.plot(fpr, tpr, label="ROC Curve")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
     st.pyplot(plt)
+else:
+    st.write("❌ Error: Y or Y_pred is empty or not properly defined.")
