@@ -1,4 +1,4 @@
-# 📦 Streamlit App Starter Kit 
+# Logistic-Regression
 ```
 ⬆️ (Replace above with your app's name)
 ```
