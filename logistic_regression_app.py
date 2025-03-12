@@ -39,6 +39,14 @@ st.markdown("""
             font-size: 24px;
             font-weight: bold;
         }
+        .center-input {
+            text-align: center;
+            width: 100%;
+        }
+        .center-input > div {
+            width: 60%;
+            margin: auto;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -47,13 +55,13 @@ st.title("🚢 Titanic Survival Prediction")
 # Centered Input Form
 st.markdown("<div class='center-container'>", unsafe_allow_html=True)
 
-pclass = st.selectbox("🎟️ Passenger Class", [1, 2, 3])
-age = st.number_input("🎂 Age", min_value=1, max_value=100, value=30)
-sibsp = st.number_input("👨‍👩‍👦 Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
-parch = st.number_input("👶 Parents/Children Aboard", min_value=0, max_value=10, value=0)
-fare = st.number_input("💰 Fare Amount", min_value=0.0, max_value=500.0, value=50.0)
-sex = st.selectbox("⚧️ Gender", ["Male", "Female"])
-embarked = st.selectbox("🚢 Embarked Port", ["Cherbourg (C)", "Queenstown (Q)", "Southampton (S)"])
+pclass = st.selectbox("🎟️ Passenger Class", [1, 2, 3], key='pclass', format_func=lambda x: f"Class {x}")
+age = st.number_input("🎂 Age", min_value=1, max_value=100, value=30, key='age')
+sibsp = st.number_input("👨‍👩‍👦 Siblings/Spouses Aboard", min_value=0, max_value=10, value=0, key='sibsp')
+parch = st.number_input("👶 Parents/Children Aboard", min_value=0, max_value=10, value=0, key='parch')
+fare = st.number_input("💰 Fare Amount", min_value=0.0, max_value=500.0, value=50.0, key='fare')
+sex = st.selectbox("⚧️ Gender", ["Male", "Female"], key='sex')
+embarked = st.selectbox("🚢 Embarked Port", ["Cherbourg (C)", "Queenstown (Q)", "Southampton (S)"], key='embarked')
 
 st.markdown("</div>", unsafe_allow_html=True)
 
